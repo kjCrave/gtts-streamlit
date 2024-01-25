@@ -1,2 +1,6 @@
 streamlit
 gtts
+pyttsx3
+os
+tempfile
+shutil
