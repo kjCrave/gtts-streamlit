@@ -2,71 +2,57 @@ import streamlit as st
 from gtts import gTTS
 import pyttsx3
 import tempfile
-import shutil
+import os
 
-# Initialize the Text-to-Speech engine for pyttsx3
-engine = pyttsx3.init()
+# Function to convert text to speech using gtts
+def text_to_speech_gtts(text, filename):
+    tts = gTTS(text=text, lang='en')
+    tts.save(filename)
 
-# Create a temporary directory to store audio files
-temp_dir = tempfile.mkdtemp()
-
-# Define a Streamlit app
-def main():
-    st.title("Crave Voice Over Placeholder Generator")
-
-    # Text input for user to enter the text
-    text_input = st.text_area("Enter the text to be synthesized:")
-
-    # Radio button to select the voice category
-    voice_category = st.radio("Select Voice Category:", ["Male", "Female"])
-
-    # Dropdown menu to select the speed of the audio (limited to Normal and Slow)
-    speed_options = ["Normal", "Slow"]
-    selected_speed = st.selectbox("Select Speed:", speed_options)
-
-    # Button to synthesize and play the speech
-    if st.button("Synthesize and Play"):
-        audio_file = None
-
-        # Set the speech rate based on the selected speed
-        speech_rate = get_speech_rate(selected_speed)
-
-        if voice_category == "Male":
-            audio_file = synthesize_speech_pyttsx3(text_input, speech_rate)
-        elif voice_category == "Female":
-            audio_file = synthesize_speech_gtts(text_input, speech_rate)
-
-        if audio_file:
-            st.audio(audio_file, format="audio/wav")
-
-    # Clear temporary directory and files
-    clear_temporary_files()
-
-# Function to synthesize speech using pyttsx3 with a specified speech rate
-def synthesize_speech_pyttsx3(text, speech_rate):
-    engine.setProperty("rate", speech_rate)  # Set the speech rate
-    audio_file = tempfile.mktemp(suffix=".wav", dir=temp_dir)
-    engine.save_to_file(text, audio_file)
+# Function to convert text to speech using pyttsx3
+def text_to_speech_pyttsx3(text, filename, speech_rate):
+    engine = pyttsx3.init()
+    engine.setProperty('rate', speech_rate)
+    engine.save_to_file(text, filename)
     engine.runAndWait()
-    return audio_file
 
-# Function to synthesize speech using gtts with a specified speech rate
-def synthesize_speech_gtts(text, speech_rate):
-    audio_file = tempfile.mktemp(suffix=".mp3", dir=temp_dir)
-    tts = gTTS(text, slow=speech_rate == 100)  # Set slow mode for "Slow" speed
-    tts.save(audio_file)
-    return audio_file
+# Streamlit UI components
+st.title('Text to Speech Converter')
 
-# Function to get the speech rate based on the selected speed
-def get_speech_rate(selected_speed):
-    if selected_speed == "Slow":
-        return 100  # Set a slower speech rate for "Slow" speed
-    else:
-        return 200  # Default to Normal speed
+text_input = st.text_area("Enter Text", height=300)
+speech_rate = st.selectbox("Select Speech Rate", ["Normal", "Slow"])
 
-# Function to clear temporary directory and files
-def clear_temporary_files():
-    shutil.rmtree(temp_dir, ignore_errors=True)
+if st.button('Convert'):
+    # Create a temporary directory to save audio files
+    temp_dir = tempfile.mkdtemp()
+    
+    # Define the file paths for both gtts and pyttsx3 audio
+    gtts_filename = os.path.join(temp_dir, "female_voice.mp3")
+    pyttsx3_filename = os.path.join(temp_dir, "male_voice.wav")
+    
+    # Convert text to speech using gtts
+    text_to_speech_gtts(text_input, gtts_filename)
+    
+    # Convert text to speech using pyttsx3
+    speech_rate = 200 if speech_rate == "Normal" else 100  # Adjust speech rate as needed
+    text_to_speech_pyttsx3(text_input, pyttsx3_filename, speech_rate)
+    
+    # Download buttons for both gtts and pyttsx3 audio
+    st.markdown("## Download Audio Files")
+    st.markdown("### Female Voice (gtts Audio)")
+    with open(gtts_filename, "rb") as gtts_file:
+        st.download_button(
+            label="Download Female Voice (gtts) Audio",
+            data=gtts_file,
+            file_name="female_voice.mp3",
+            mime="audio/mpeg"
+        )
 
-if __name__ == "__main__":
-    main()
+    st.markdown("### Male Voice (Pyttsx3 Audio)")
+    with open(pyttsx3_filename, "rb") as pyttsx3_file:
+        st.download_button(
+            label="Download Male Voice (Pyttsx3) Audio",
+            data=pyttsx3_file,
+            file_name="male_voice.wav",
+            mime="audio/wav"
+        )
