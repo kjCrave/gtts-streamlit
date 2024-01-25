@@ -1,7 +1,6 @@
 import streamlit as st
 from gtts import gTTS
 import pyttsx3
-import os
 import tempfile
 import shutil
 
@@ -13,7 +12,7 @@ temp_dir = tempfile.mkdtemp()
 
 # Define a Streamlit app
 def main():
-    st.title("Text to Speech with Streamlit")
+    st.title("Crave Voice Over Placeholder Generator")
 
     # Text input for user to enter the text
     text_input = st.text_area("Enter the text to be synthesized:")
@@ -46,14 +45,14 @@ def main():
 # Function to synthesize speech using pyttsx3 with a specified speech rate
 def synthesize_speech_pyttsx3(text, speech_rate):
     engine.setProperty("rate", speech_rate)  # Set the speech rate
-    audio_file = os.path.join(temp_dir, "temp.wav")
+    audio_file = tempfile.mktemp(suffix=".wav", dir=temp_dir)
     engine.save_to_file(text, audio_file)
     engine.runAndWait()
     return audio_file
 
 # Function to synthesize speech using gtts with a specified speech rate
 def synthesize_speech_gtts(text, speech_rate):
-    audio_file = os.path.join(temp_dir, "temp_gtts.mp3")
+    audio_file = tempfile.mktemp(suffix=".mp3", dir=temp_dir)
     tts = gTTS(text, slow=speech_rate == 100)  # Set slow mode for "Slow" speed
     tts.save(audio_file)
     return audio_file
