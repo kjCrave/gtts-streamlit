@@ -2,4 +2,4 @@ streamlit
 gtts
 pyttsx3
 tempfile
-shutil
+os
